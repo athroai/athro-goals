@@ -16,10 +16,16 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
     const supabase = createClient();
+    const baseUrl =
+      typeof process.env.NEXT_PUBLIC_APP_URL === "string" &&
+      process.env.NEXT_PUBLIC_APP_URL &&
+      !process.env.NEXT_PUBLIC_APP_URL.includes("localhost")
+        ? process.env.NEXT_PUBLIC_APP_URL
+        : window.location.origin;
     const { error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/api/auth/callback` },
+      options: { emailRedirectTo: `${baseUrl}/api/auth/callback` },
     });
     setLoading(false);
     if (err) {
