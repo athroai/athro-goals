@@ -20,6 +20,8 @@ interface Step {
   sources: unknown;
   checklist: string[] | null;
   costNote?: string | null;
+  savingsTarget?: string | null;
+  recommendations?: string[] | null;
 }
 
 interface PathwayViewProps {
@@ -205,21 +207,18 @@ export function PathwayView({
                     {step.stepOrder}. {step.title}
                   </h3>
                   {complete && (
-                    <>
-                      <span className="text-[var(--gold)]" title="Stage complete">
-                        ★
-                      </span>
-                      <span className="rounded-full bg-[var(--bright-green)]/20 px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--bright-green)]">
-                        Stage complete
-                      </span>
-                    </>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bright-green)]/20 px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--bright-green)]">
+                      ★ Stage complete
+                    </span>
                   )}
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
+                <div className="flex shrink-0 flex-col items-end gap-0.5">
+                  <span className="text-xs font-medium text-[var(--muted)]">Achieve By</span>
                   <EditableDate
                     value={getDisplayDate(step)}
                     onChange={(v) => setDisplayDate(step.id, v)}
                   />
+                  <span className="text-[10px] text-[var(--muted)]">click to edit</span>
                 </div>
               </div>
               {step.stageLabel && (
@@ -255,17 +254,34 @@ export function PathwayView({
                   ))}
                 </div>
               )}
-              {(step.estimatedCost != null || costNote) && (
-                <div className="mt-2 rounded-lg bg-[rgba(228,201,126,0.05)] p-3">
+              {(step.estimatedCost != null || costNote || step.savingsTarget || (step.recommendations?.length ?? 0) > 0) && (
+                <div className="mt-2 rounded-lg bg-[rgba(228,201,126,0.05)] p-3 space-y-2">
+                  {step.savingsTarget && (
+                    <p className="text-sm font-medium text-[var(--gold)]">
+                      {step.savingsTarget}
+                    </p>
+                  )}
                   {step.estimatedCost != null && (
                     <p className="text-sm font-medium text-[var(--gold)]">
                       Est. cost: £{step.estimatedCost.toLocaleString()}
                     </p>
                   )}
                   {costNote && (
-                    <p className={`text-sm text-[var(--muted)] ${step.estimatedCost != null ? "mt-1" : ""}`}>
+                    <p className="text-sm text-[var(--muted)]">
                       {costNote}
                     </p>
+                  )}
+                  {step.recommendations && step.recommendations.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-[var(--gold)]">Recommendations</p>
+                      <ul className="mt-1 space-y-1">
+                        {step.recommendations.map((r, i) => (
+                          <li key={i} className="text-sm text-[var(--light)]">
+                            • {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               )}

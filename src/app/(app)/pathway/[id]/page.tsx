@@ -48,7 +48,9 @@ export default async function PathwayPage({
     );
   }
 
-  const stepDataList = (pathway.pathwayData as { steps?: Array<{ costNote?: string }> })?.steps ?? [];
+  const stepDataList = (pathway.pathwayData as {
+    steps?: Array<{ costNote?: string; savingsTarget?: string; recommendations?: string[] }>;
+  })?.steps ?? [];
   const stepsForView = pathway.steps.map((s, i) => {
     const checklist = s.checklist;
     const checklistArr = Array.isArray(checklist)
@@ -68,6 +70,8 @@ export default async function PathwayPage({
       sources: s.sources,
       checklist: checklistArr,
       costNote: stepDataList[i]?.costNote,
+      savingsTarget: stepDataList[i]?.savingsTarget,
+      recommendations: stepDataList[i]?.recommendations,
     };
   });
 

@@ -6,11 +6,12 @@
 
 import type { GoalDomain } from "@/agents/router";
 import { FINANCE_CHUNKS } from "./financeChunks";
+import { LIFESTYLE_CHUNKS } from "./lifestyleChunks";
 import { INGESTED_GOVUK_CHUNKS } from "./ingestedChunks";
 
 const MAX_CHUNKS = 5;
-const MAX_RETRIEVALS_PER_CONVERSATION = 6;
-const MAX_RETRIEVALS_PER_TURN = 2;
+const MAX_RETRIEVALS_PER_CONVERSATION = 10;
+const MAX_RETRIEVALS_PER_TURN = 3;
 
 type ChunkInput = { content: string; source: string; sourceUrl?: string };
 
@@ -23,6 +24,12 @@ const ALL_FINANCE_CHUNKS: ChunkInput[] = [
   })),
   ...FINANCE_CHUNKS,
 ];
+
+const ALL_LIFESTYLE_CHUNKS: ChunkInput[] = LIFESTYLE_CHUNKS.map((c) => ({
+  content: c.content,
+  source: c.source,
+  sourceUrl: c.sourceUrl,
+}));
 
 // Simple keyword scoring for MVP (no embeddings)
 function scoreChunk(content: string, query: string): number {
@@ -59,9 +66,26 @@ export function retrieveKnowledge(
       .filter((c) => c.score > 0)
       .slice(0, MAX_CHUNKS)
       .map(({ content, source, sourceUrl }) => ({ content, source, sourceUrl }));
-    // If no keyword match, return top 2 chunks by default
     if (chunks.length === 0) {
       chunks = ALL_FINANCE_CHUNKS.slice(0, 2).map((c) => ({
+        content: c.content,
+        source: c.source,
+        sourceUrl: c.sourceUrl,
+      }));
+    }
+  } else if (domain === "LIFESTYLE" || domain === "OTHER") {
+    const pool = ALL_LIFESTYLE_CHUNKS;
+    const scored = pool.map((chunk) => ({
+      ...chunk,
+      score: scoreChunk(chunk.content, query),
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    chunks = scored
+      .filter((c) => c.score > 0)
+      .slice(0, MAX_CHUNKS)
+      .map(({ content, source, sourceUrl }) => ({ content, source, sourceUrl }));
+    if (chunks.length === 0) {
+      chunks = pool.slice(0, 3).map((c) => ({
         content: c.content,
         source: c.source,
         sourceUrl: c.sourceUrl,

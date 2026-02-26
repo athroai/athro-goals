@@ -8,13 +8,14 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/user";
-import Anthropic from "@anthropic-ai/sdk";
-import { getPathwayBuildPrompt } from "@/prompts/pathwayBuild";
+import { invokePathwayBuildAgent } from "@/agents/pathwayBuildAgent";
+import type { GoalDomain } from "@/agents/router";
 
 export async function POST(req: NextRequest) {
   let pathwayId: string;
   let userId: string;
   let conversationSummary: string;
+  let pathwayDomain: GoalDomain | null = null;
   let groundingType: "FACTUAL" | "REASONING" | "MIXED" = "MIXED";
 
   try {
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
         : `USER: ${pathway.goal}\nNo further conversation.`;
     groundingType =
       (pathway.groundingType as "FACTUAL" | "REASONING" | "MIXED") ?? "MIXED";
+    pathwayDomain = pathway.domain as GoalDomain | null;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("Pathway build setup error:", msg, error);
@@ -91,6 +93,7 @@ export async function POST(req: NextRequest) {
           pathwayId,
           userId,
           conversationSummary,
+          pathwayDomain,
           groundingType,
           sendEvent
         );
@@ -129,56 +132,26 @@ async function generatePathway(
   pathwayId: string,
   userId: string,
   conversationSummary: string,
+  domain: GoalDomain | null,
   groundingType: "FACTUAL" | "REASONING" | "MIXED",
   sendEvent: (event: string, data: unknown) => void
 ) {
   try {
     await prisma.pathwayStep.deleteMany({ where: { pathwayId } });
 
-    const client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    });
+    const effectiveDomain = domain ?? "OTHER";
 
     sendEvent("progress", { message: "Researching steps, timelines, and costs..." });
 
-    const buildPrompt = getPathwayBuildPrompt(groundingType);
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      system: buildPrompt,
-      messages: [
-        {
-          role: "user",
-          content: `Conversation:\n\n${conversationSummary}\n\nBuild the pathway. Output ONLY valid JSON.`,
-        },
-      ],
-    });
-
-    sendEvent("progress", { message: "Processing pathway data..." });
-
-    let fullResponse = "";
-    for (const block of response.content) {
-      if (block.type === "text") fullResponse += block.text;
-    }
-
-    let jsonStr = fullResponse
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```\s*$/, "")
-      .trim();
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-    if (jsonMatch) jsonStr = jsonMatch[0];
-
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(jsonStr);
-    } catch {
-      console.error("JSON parse failed:", fullResponse.substring(0, 800));
-      await prisma.pathway.update({
-        where: { id: pathwayId },
-        data: { status: "ERROR" },
-      });
-      throw new Error("Failed to parse pathway JSON");
-    }
+    const { json: parsed } = await invokePathwayBuildAgent(
+      conversationSummary,
+      effectiveDomain,
+      groundingType,
+      {
+        onToolStart: (name) => sendEvent("progress", { message: `Researching (${name})...` }),
+        onToolEnd: () => sendEvent("progress", { message: "Synthesising pathway..." }),
+      }
+    );
 
     sendEvent("progress", { message: "Saving your pathway..." });
 

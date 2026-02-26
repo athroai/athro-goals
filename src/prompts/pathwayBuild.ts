@@ -33,6 +33,8 @@ const OUTPUT_SCHEMA = `
       "estimatedCost": 2000,
       "costBreakdown": [{"item": "Fee", "amount": 1500}],
       "costNote": "Optional: how to fund this, what it covers, expected return",
+      "savingsTarget": "Optional: e.g. 'Save £3,000 by March 2027' — money needed by this step when relevant",
+      "recommendations": ["Optional: specific airlines, fares, places, providers from your research"],
       "sources": ["gov.uk/buying-a-home"],
       "sourceType": "factual",
       "tips": ["Practical tip"],
@@ -99,6 +101,8 @@ ${OUTPUT_SCHEMA}
 - Each step MUST have definiteDate (e.g. "March 2027") and definiteDateIso (YYYY-MM-DD for the first day of that month).
 - sourceType: "factual" (cited) or "reasoning" (judgment). Required.
 - checklist: 2-5 concrete actions the user can tick off. Include only when useful (most steps). Examples: "Set up savings account", "Apply for visa", "Book health check". Make each item a single clear action.
+- When costs apply: include savingsTarget per step (e.g. "Save £X by [date]") so the user knows how much to have when.
+- For travel goals: use recommendations from your research — specific airlines, typical fares, amazing places to visit. Never generic advice.
 - 5-8 steps minimum. Output valid JSON only.`;
 }
 
