@@ -211,13 +211,18 @@ If no tools are available or you hit limits, use your knowledge but prefer citin
     .replace(/\s*```\s*$/, "")
     .trim();
   const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-  const parsedStr = jsonMatch ? jsonMatch[0] : jsonStr;
+  const parsedStr = jsonMatch ? jsonMatch[0] : jsonStr || "{}";
 
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(parsedStr) as Record<string, unknown>;
-  } catch {
-    throw new Error(`Pathway JSON parse failed. Raw: ${fullResponse.substring(0, 500)}`);
+  } catch (parseErr) {
+    const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+    throw new Error(`Pathway JSON parse failed: ${msg}. Raw (first 600 chars): ${fullResponse.substring(0, 600)}`);
+  }
+
+  if (!parsed.steps || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
+    throw new Error(`Pathway has no steps. Raw: ${fullResponse.substring(0, 400)}`);
   }
 
   return { json: parsed, rawText: fullResponse };

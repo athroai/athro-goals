@@ -8,7 +8,9 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/user";
+import Anthropic from "@anthropic-ai/sdk";
 import { invokePathwayBuildAgent } from "@/agents/pathwayBuildAgent";
+import { getPathwayBuildPrompt } from "@/prompts/pathwayBuild";
 import type { GoalDomain } from "@/agents/router";
 
 export async function POST(req: NextRequest) {
@@ -128,6 +130,47 @@ export async function POST(req: NextRequest) {
   });
 }
 
+async function generatePathwayOneShot(
+  conversationSummary: string,
+  groundingType: "FACTUAL" | "REASONING" | "MIXED"
+): Promise<Record<string, unknown>> {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+  const buildPrompt = getPathwayBuildPrompt(groundingType);
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 4096,
+    system: buildPrompt,
+    messages: [
+      {
+        role: "user",
+        content: `Conversation:\n\n${conversationSummary}\n\nBuild the pathway. Output ONLY valid JSON.`,
+      },
+    ],
+  });
+
+  let fullResponse = "";
+  for (const block of response.content) {
+    if (block.type === "text") fullResponse += block.text;
+  }
+
+  const jsonStr = fullResponse
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/, "")
+    .trim();
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+  const parsedStr = jsonMatch ? jsonMatch[0] : jsonStr;
+
+  try {
+    const parsed = JSON.parse(parsedStr) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Invalid pathway structure");
+    }
+    return parsed;
+  } catch (e) {
+    throw new Error(`Pathway JSON parse failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 async function generatePathway(
   pathwayId: string,
   userId: string,
@@ -143,15 +186,23 @@ async function generatePathway(
 
     sendEvent("progress", { message: "Researching steps, timelines, and costs..." });
 
-    const { json: parsed } = await invokePathwayBuildAgent(
-      conversationSummary,
-      effectiveDomain,
-      groundingType,
-      {
-        onToolStart: (name) => sendEvent("progress", { message: `Researching (${name})...` }),
-        onToolEnd: () => sendEvent("progress", { message: "Synthesising pathway..." }),
-      }
-    );
+    let parsed: Record<string, unknown>;
+    try {
+      const result = await invokePathwayBuildAgent(
+        conversationSummary,
+        effectiveDomain,
+        groundingType,
+        {
+          onToolStart: (name) => sendEvent("progress", { message: `Researching (${name})...` }),
+          onToolEnd: () => sendEvent("progress", { message: "Synthesising pathway..." }),
+        }
+      );
+      parsed = result.json;
+    } catch (agentErr) {
+      console.warn("Pathway agent failed, falling back to one-shot:", agentErr);
+      sendEvent("progress", { message: "Generating pathway..." });
+      parsed = await generatePathwayOneShot(conversationSummary, groundingType);
+    }
 
     sendEvent("progress", { message: "Saving your pathway..." });
 
