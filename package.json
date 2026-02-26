@@ -1,0 +1,51 @@
+{
+  "name": "athro-goals",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "cap:init": "npx cap add ios",
+    "cap:sync": "npx cap sync ios",
+    "cap:open": "npx cap open ios",
+    "dev": "next dev",
+    "build": "npx prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "dotenv -e .env.local -- prisma studio",
+    "ingest:govuk": "npx tsx scripts/ingest-govuk.ts",
+    "test:e2e": "npx dotenv-cli -e .env.local -- npx tsx scripts/e2e-test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0",
+    "@capacitor/keyboard": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.1",
+    "@langchain/core": "^0.3.0",
+    "@netlify/plugin-nextjs": "^5.15.8",
+    "@prisma/client": "^5.20.0",
+    "@supabase/ssr": "^0.5.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
+    "stripe": "^20.4.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv-cli": "^7.4.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "prisma": "^5.20.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

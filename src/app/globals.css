@@ -1,0 +1,168 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Raleway:wght@300;400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+:root {
+  --gold: #e4c97e;
+  --bright-green: #4fc38a;
+  --dark-green: #3da970;
+  --dark-bg: #1c2a1e;
+  --darker-bg: #0a1612;
+  --card-bg: rgba(28, 42, 30, 0.8);
+  --light: #ffffff;
+  --muted: #b5cbb2;
+  --display-font: "Playfair Display", serif;
+  --body-font: "Inter", sans-serif;
+  --alt-font: "Raleway", sans-serif;
+  --background: var(--dark-bg);
+  --foreground: var(--light);
+}
+
+@theme inline {
+  --color-gold: #e4c97e;
+  --color-bright-green: #4fc38a;
+  --color-dark-green: #3da970;
+  --color-dark-bg: #1c2a1e;
+  --color-darker-bg: #0a1612;
+  --color-muted: #b5cbb2;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-display: var(--display-font);
+  --font-body: var(--body-font);
+  --shadow-gold-sm: 0 4px 20px rgba(228, 201, 126, 0.2);
+  --shadow-gold-md: 0 10px 40px rgba(228, 201, 126, 0.4);
+  --shadow-gold-lg: 0 20px 60px rgba(228, 201, 126, 0.5);
+  --shadow-gold-glow: 0 0 40px rgba(228, 201, 126, 0.4), 0 0 60px rgba(79, 195, 138, 0.3);
+  --radius-card: 16px;
+  --radius-feature: 24px;
+  --radius-button: 50px;
+  --radius-pill: 999px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--dark-bg);
+  color: var(--light);
+  font-family: var(--body-font);
+}
+
+.font-display {
+  font-family: var(--display-font), serif;
+}
+
+.gradient-text-hero {
+  background: linear-gradient(135deg, var(--gold), var(--bright-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-cta {
+  background: linear-gradient(135deg, var(--gold), var(--bright-green));
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+.card-hover:hover {
+  border-color: var(--gold);
+  box-shadow: 0 20px 60px rgba(228, 201, 126, 0.3);
+  transform: translateY(-10px);
+}
+
+.input-athro {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(228, 201, 126, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+.input-athro:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(228, 201, 126, 0.2);
+}
+
+.btn-cta {
+  background: linear-gradient(135deg, var(--gold), var(--bright-green));
+  color: #000;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 10px 40px rgba(228, 201, 126, 0.6);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-cta:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 50px rgba(228, 201, 126, 0.8);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--gold);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  border: 2px solid var(--gold);
+  transition: all 0.3s ease;
+}
+.btn-secondary:hover {
+  background: rgba(228, 201, 126, 0.15);
+  box-shadow: 0 0 30px rgba(228, 201, 126, 0.5);
+}
+
+.prose-chat p {
+  margin: 0 0 0.75em 0;
+}
+.prose-chat p:last-child {
+  margin-bottom: 0;
+}
+.prose-chat strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+.prose-chat em {
+  font-style: italic;
+  opacity: 0.9;
+}
+.prose-chat ul,
+.prose-chat ol {
+  margin: 0.5em 0;
+  padding-left: 1.25em;
+}
+.prose-chat li {
+  margin: 0.25em 0;
+}
+.prose-chat li::marker {
+  color: var(--gold);
+}
+.prose-chat h3,
+.prose-chat h4 {
+  color: var(--gold);
+  font-weight: 600;
+  margin: 0.75em 0 0.25em 0;
+  font-size: 0.925em;
+}
+.prose-chat a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-chat a:hover {
+  opacity: 0.8;
+}
+.prose-chat code {
+  background: rgba(228, 201, 126, 0.1);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.prose-chat hr {
+  border: none;
+  border-top: 1px solid rgba(228, 201, 126, 0.15);
+  margin: 0.75em 0;
+}

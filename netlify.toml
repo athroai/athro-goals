@@ -1,0 +1,21 @@
+# Athro Goals — Netlify
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  command = "npx prisma migrate deploy && npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["node_modules/.prisma/**", "node_modules/@prisma/client/**"]
+  external_node_modules = []
+
+[functions."*"]
+  timeout = 60
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

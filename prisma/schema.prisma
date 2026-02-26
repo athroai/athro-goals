@@ -1,0 +1,142 @@
+// Athro Goals — Prisma schema
+// Pathways have goals (unbounded), target date/age, and domain-specific steps with definite dates
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum SubscriptionTier {
+  FREE
+  EXPLORER
+  PRO
+  ADVISER
+}
+
+enum PathwayStatus {
+  INTAKE
+  GENERATING
+  COMPLETE
+  ERROR
+  ARCHIVED
+}
+
+enum GoalDomain {
+  FINANCE
+  HEALTH
+  EDUCATION
+  PROPERTY
+  SPORT
+  LIFESTYLE
+  OTHER
+}
+
+model User {
+  id                   String   @id @default(uuid()) @db.Uuid
+  supabaseAuthId       String   @unique @map("supabase_auth_id")
+  email                String   @unique
+  name                 String?
+  subscriptionTier     SubscriptionTier @default(FREE) @map("subscription_tier")
+  pathwaysUsedThisMonth Int      @default(0) @map("pathways_used_this_month")
+  pathwaysResetDate     DateTime? @map("pathways_reset_date")
+  stripeCustomerId     String?  @unique @map("stripe_customer_id")
+  stripeSubId          String?  @unique @map("stripe_sub_id")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  pathways     Pathway[]
+  chatMessages ChatMessage[]
+  folders      Folder[]
+
+  @@map("users")
+}
+
+model Pathway {
+  id                 String         @id @default(uuid()) @db.Uuid
+  userId             String         @map("user_id") @db.Uuid
+  goal               String         // User's stated goal (e.g. "I want to get a mortgage")
+  goalNormalised     String?        @map("goal_normalised")
+  domain             GoalDomain?    // Router output: FINANCE, HEALTH, etc.
+  groundingType      String?        @map("grounding_type") // FACTUAL | REASONING | MIXED
+  targetDate         DateTime?      @map("target_date") // "by December 2028"
+  targetAge          Int?           @map("target_age")   // "by the time I'm 30"
+  attainments       Json?          // ["sobriety", "a land rover", "to impress Oxford"]
+  currentSituation   String?        @map("current_situation") @db.Text
+  status             PathwayStatus  @default(INTAKE)
+  pathwayData        Json?          @map("pathway_data")
+  summaryText        String?        @map("summary_text") @db.Text
+  totalSteps         Int?           @map("total_steps")
+  estimatedYears     Float?         @map("estimated_years")
+  estimatedTotalCost Float?         @map("estimated_total_cost")
+  folderId           String?        @map("folder_id") @db.Uuid
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder       Folder?       @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  steps        PathwayStep[]
+  chatMessages ChatMessage[]
+
+  @@index([userId])
+  @@index([folderId])
+  @@index([domain])
+  @@map("pathways")
+}
+
+model PathwayStep {
+  id                   String   @id @default(uuid()) @db.Uuid
+  pathwayId            String   @map("pathway_id") @db.Uuid
+  stepOrder            Int      @map("step_order")
+  title                String
+  description          String   @db.Text
+  stageLabel           String   @map("stage_label")
+  definiteDate         String?   @map("definite_date") // e.g. "Apply by March 2027"
+  timelineMonths       Int?     @map("timeline_months")
+  estimatedCost        Float?   @map("estimated_cost")
+  costBreakdown        Json?    @map("cost_breakdown")
+  sources              Json?    // RAG/tool sources for this step
+  tips                 String?  @db.Text
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  pathway Pathway @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+
+  @@unique([pathwayId, stepOrder])
+  @@index([pathwayId])
+  @@map("pathway_steps")
+}
+
+model Folder {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pathways Pathway[]
+
+  @@index([userId])
+  @@map("folders")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  pathwayId String   @map("pathway_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      String
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  pathway Pathway @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([pathwayId])
+  @@index([userId])
+  @@map("chat_messages")
+}
