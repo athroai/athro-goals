@@ -137,8 +137,9 @@ export async function invokeDomainAgent(
         ]
       : [];
 
+  const recentHistory = chatHistory.slice(-12);
   const messages: Anthropic.Messages.MessageParam[] = [
-    ...chatHistory.map((m) => ({
+    ...recentHistory.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     })),

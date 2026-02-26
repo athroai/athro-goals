@@ -257,6 +257,9 @@ export function ConversationChat({
               }
               break;
             }
+            case "heartbeat":
+              gotResponse = true;
+              break;
             case "error":
               gotErrorEvent = true;
               setMessages((prev) => [

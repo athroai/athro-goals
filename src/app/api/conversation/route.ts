@@ -162,6 +162,10 @@ export async function POST(req: NextRequest) {
           }
         };
 
+        const heartbeat = setInterval(() => {
+          sendEvent("heartbeat", { ts: Date.now() });
+        }, 3000);
+
         try {
           sendEvent("pathwayId", { pathwayId });
 
@@ -231,6 +235,7 @@ export async function POST(req: NextRequest) {
           const shouldOfferBuild =
             (offerBuild && userMsgCount >= 3) || inputLocked;
 
+          clearInterval(heartbeat);
           sendEvent("done", {
             pathwayId,
             offerBuild: shouldOfferBuild,
@@ -238,6 +243,7 @@ export async function POST(req: NextRequest) {
           });
           controller.close();
         } catch (err) {
+          clearInterval(heartbeat);
           const msg = err instanceof Error ? err.message : String(err);
           console.error("Conversation stream error:", msg, err);
           sendEvent("error", { error: "Something went wrong. Please try again." });
