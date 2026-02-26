@@ -104,8 +104,14 @@ export async function POST(req: NextRequest) {
         sendEvent("complete", { pathwayId });
       } catch (err) {
         clearInterval(heartbeat);
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error("Pathway build error:", msg, err);
+        const raw = err instanceof Error ? err.message : String(err);
+        console.error("Pathway build error:", raw, err);
+        const userMsg =
+          /input stream|moderation|content policy|invalid_request/i.test(raw)
+            ? "Pathway generation failed. Please try rephrasing your goal and try again."
+            : raw.length > 120
+              ? "Pathway generation failed. Please try again."
+              : raw;
         try {
           await prisma.pathway.update({
             where: { id: pathwayId },
@@ -114,7 +120,7 @@ export async function POST(req: NextRequest) {
         } catch {
           /* ignore */
         }
-        sendEvent("error", { error: msg });
+        sendEvent("error", { error: userMsg });
       }
 
       controller.close();
@@ -193,8 +199,8 @@ async function generatePathway(
         effectiveDomain,
         groundingType,
         {
-          onToolStart: (name) => sendEvent("progress", { message: `Researching (${name})...` }),
-          onToolEnd: () => sendEvent("progress", { message: "Synthesising pathway..." }),
+          onResearchStart: () => sendEvent("progress", { message: "Researching costs, timelines, and recommendations..." }),
+          onResearchEnd: (n) => sendEvent("progress", { message: `Found ${n} sources. Generating pathway...` }),
         }
       );
       parsed = result.json;
