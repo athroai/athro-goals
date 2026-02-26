@@ -38,7 +38,7 @@ export async function POST(
         groundingType: original.groundingType,
         targetDate: original.targetDate,
         targetAge: original.targetAge,
-        attainments: original.attainments,
+        attainments: original.attainments ?? undefined,
         currentSituation: original.currentSituation,
         status: "INTAKE",
         folderId: original.folderId,
