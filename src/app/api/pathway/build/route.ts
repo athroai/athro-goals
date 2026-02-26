@@ -194,6 +194,8 @@ async function generatePathway(
           stageLabel: String(step.stageLabel ?? ""),
           definiteDate:
             typeof step.definiteDate === "string" ? step.definiteDate : null,
+          definiteDateIso:
+            typeof step.definiteDateIso === "string" ? step.definiteDateIso : null,
           timelineMonths:
             typeof step.timelineMonths === "number" ? step.timelineMonths : null,
           estimatedCost:
@@ -216,6 +218,9 @@ async function generatePathway(
             : typeof step.tips === "string"
               ? step.tips
               : null,
+          checklist: Array.isArray(step.checklist)
+            ? (step.checklist as string[]).filter((x): x is string => typeof x === "string")
+            : undefined,
         })),
       });
     }

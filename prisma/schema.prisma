@@ -50,9 +50,10 @@ model User {
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt            DateTime @updatedAt @map("updated_at")
 
-  pathways     Pathway[]
-  chatMessages ChatMessage[]
-  folders      Folder[]
+  pathways         Pathway[]
+  chatMessages     ChatMessage[]
+  folders          Folder[]
+  pathwayProgress  PathwayProgress[]
 
   @@map("users")
 }
@@ -78,10 +79,11 @@ model Pathway {
   createdAt          DateTime       @default(now()) @map("created_at")
   updatedAt          DateTime       @updatedAt @map("updated_at")
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  folder       Folder?       @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder       Folder?           @relation(fields: [folderId], references: [id], onDelete: SetNull)
   steps        PathwayStep[]
   chatMessages ChatMessage[]
+  progress     PathwayProgress[]
 
   @@index([userId])
   @@index([folderId])
@@ -96,12 +98,14 @@ model PathwayStep {
   title                String
   description          String   @db.Text
   stageLabel           String   @map("stage_label")
-  definiteDate         String?   @map("definite_date") // e.g. "Apply by March 2027"
+  definiteDate         String?   @map("definite_date") // e.g. "March 2027"
+  definiteDateIso      String?   @map("definite_date_iso") // YYYY-MM-DD for notifications
   timelineMonths       Int?     @map("timeline_months")
   estimatedCost        Float?   @map("estimated_cost")
   costBreakdown        Json?    @map("cost_breakdown")
   sources              Json?    // RAG/tool sources for this step
   tips                 String?  @db.Text
+  checklist            Json?    // ["Action 1", "Action 2"] — tickable items
   createdAt            DateTime @default(now()) @map("created_at")
 
   pathway Pathway @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
@@ -109,6 +113,23 @@ model PathwayStep {
   @@unique([pathwayId, stepOrder])
   @@index([pathwayId])
   @@map("pathway_steps")
+}
+
+model PathwayProgress {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  pathwayId        String   @map("pathway_id") @db.Uuid
+  stepCompletions  Json?    @map("step_completions") // { stepId: [true, false, true] }
+  customDates      Json?    @map("custom_dates") // { stepId: "15/03/2026" } dd/mm/yyyy
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pathway  Pathway  @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pathwayId])
+  @@index([pathwayId])
+  @@map("pathway_progress")
 }
 
 model Folder {

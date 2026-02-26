@@ -28,13 +28,15 @@ const OUTPUT_SCHEMA = `
       "description": "Detailed description. 2-4 paragraphs.",
       "stageLabel": "e.g. Preparation, Application, Completion",
       "definiteDate": "March 2027",
+      "definiteDateIso": "2027-03-01",
       "timelineMonths": 6,
       "estimatedCost": 2000,
       "costBreakdown": [{"item": "Fee", "amount": 1500}],
       "costNote": "Optional: how to fund this, what it covers, expected return",
       "sources": ["gov.uk/buying-a-home"],
       "sourceType": "factual",
-      "tips": ["Practical tip"]
+      "tips": ["Practical tip"],
+      "checklist": ["Action 1 to complete", "Action 2", "Action 3"]
     }
   ]
 }
@@ -94,8 +96,9 @@ Output ONLY valid JSON (no markdown):
 ${OUTPUT_SCHEMA}
 
 ## RULES
-- Each step MUST have definiteDate. Work backward from target date/age.
+- Each step MUST have definiteDate (e.g. "March 2027") and definiteDateIso (YYYY-MM-DD for the first day of that month).
 - sourceType: "factual" (cited) or "reasoning" (judgment). Required.
+- checklist: 2-5 concrete actions the user can tick off. Include only when useful (most steps). Examples: "Set up savings account", "Apply for visa", "Book health check". Make each item a single clear action.
 - 5-8 steps minimum. Output valid JSON only.`;
 }
 
