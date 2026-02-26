@@ -71,22 +71,32 @@ export async function invokePathwayBuildAgent(
   let webAnswer = "";
 
   if (process.env.TAVILY_API_KEY) {
-    const searches = await Promise.allSettled(
-      searchQueries.map((q) => tavilySearch(q, { maxResults: 3 }))
-    );
-    for (const result of searches) {
-      if (result.status === "fulfilled") {
-        for (const r of result.value.results) {
-          webResults.push({
-            title: r.title,
-            url: r.url,
-            snippet: truncate(r.content, 300),
-          });
-        }
-        if (result.value.answer && !webAnswer) {
-          webAnswer = truncate(result.value.answer, 500);
+    try {
+      const tavilyTimeout = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error("Tavily timeout")), 5000)
+      );
+      const searches = await Promise.race([
+        Promise.allSettled(
+          searchQueries.map((q) => tavilySearch(q, { maxResults: 3 }))
+        ),
+        tavilyTimeout,
+      ]) as PromiseSettledResult<Awaited<ReturnType<typeof tavilySearch>>>[];
+      for (const result of searches) {
+        if (result.status === "fulfilled") {
+          for (const r of result.value.results) {
+            webResults.push({
+              title: r.title,
+              url: r.url,
+              snippet: truncate(r.content, 300),
+            });
+          }
+          if (result.value.answer && !webAnswer) {
+            webAnswer = truncate(result.value.answer, 500);
+          }
         }
       }
+    } catch {
+      console.warn("Tavily search timed out, proceeding without web data");
     }
   }
 
@@ -114,17 +124,28 @@ export async function invokePathwayBuildAgent(
     : buildPrompt;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 8192,
-    system: systemPrompt,
-    messages: [
+  const abortController = new AbortController();
+  const apiTimeout = setTimeout(() => abortController.abort(), 45_000);
+
+  let response: Anthropic.Messages.Message;
+  try {
+    response = await client.messages.create(
       {
-        role: "user",
-        content: `Conversation:\n\n${trimmedConversation}\n\nBuild the pathway using the research data above. Include specific costs, recommendations, and savings targets. Output ONLY valid JSON.`,
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: `Conversation:\n\n${trimmedConversation}\n\nBuild the pathway using the research data above. Include specific costs, recommendations, and savings targets. Output ONLY valid JSON.`,
+          },
+        ],
       },
-    ],
-  });
+      { signal: abortController.signal }
+    );
+  } finally {
+    clearTimeout(apiTimeout);
+  }
 
   let fullResponse = "";
   for (const block of response.content) {

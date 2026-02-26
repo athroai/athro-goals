@@ -142,17 +142,28 @@ async function generatePathwayOneShot(
 ): Promise<Record<string, unknown>> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const buildPrompt = getPathwayBuildPrompt(groundingType);
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
-    system: buildPrompt,
-    messages: [
+  const abortController = new AbortController();
+  const apiTimeout = setTimeout(() => abortController.abort(), 50_000);
+
+  let response: Anthropic.Messages.Message;
+  try {
+    response = await client.messages.create(
       {
-        role: "user",
-        content: `Conversation:\n\n${conversationSummary}\n\nBuild the pathway. Output ONLY valid JSON.`,
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4096,
+        system: buildPrompt,
+        messages: [
+          {
+            role: "user",
+            content: `Conversation:\n\n${conversationSummary}\n\nBuild the pathway. Output ONLY valid JSON.`,
+          },
+        ],
       },
-    ],
-  });
+      { signal: abortController.signal }
+    );
+  } finally {
+    clearTimeout(apiTimeout);
+  }
 
   let fullResponse = "";
   for (const block of response.content) {
