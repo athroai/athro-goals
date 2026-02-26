@@ -17,7 +17,7 @@
    - **Publish directory:** `.next`
    - **Node version:** 20 (set via `NODE_VERSION` in netlify.toml)
 4. Deploy. The first build may fail without env vars — that’s expected.
-5. Note your site URL (e.g. `https://athro-goals.netlify.app`)
+5. Note your site URL (e.g. `https://athrogoals.co.uk`)
 
 ---
 
@@ -32,12 +32,12 @@ In Netlify: **Site configuration** → **Environment variables** → **Add a var
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key |
 | `DATABASE_URL` | Yes | Postgres connection string (Supabase) |
 | `DIRECT_URL` | Yes | Direct Postgres URL (Supabase) |
-| `NEXT_PUBLIC_APP_URL` | Yes | Your Netlify site URL, e.g. `https://athro-goals.netlify.app` |
+| `NEXT_PUBLIC_APP_URL` | Yes | Your Netlify site URL, e.g. `https://athrogoals.co.uk` |
 | `STRIPE_SECRET_KEY` | For payments | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | For payments | Stripe webhook signing secret |
-| `STRIPE_EXPLORER_PRICE_ID` | For payments | Stripe price ID for Explorer tier |
-| `STRIPE_PRO_PRICE_ID` | For payments | Stripe price ID for Pro tier |
-| `STRIPE_ADVISER_PRICE_ID` | For payments | Stripe price ID for Adviser tier |
+| `STRIPE_EXPLORER_PRICE_ID` | For payments | `price_1T54X3HNdyOnRfxuz7UPYpFQ` (Explorer £4.99/mo) |
+| `STRIPE_PRO_PRICE_ID` | For payments | `price_1T54XdHNdyOnRfxuePxn2vlK` (Pro £9.99/mo) |
+| `STRIPE_ADVISER_PRICE_ID` | For payments | `price_1T54Y2HNdyOnRfxu9i6wkHGA` (Adviser £29.99/mo) |
 
 ---
 
@@ -45,10 +45,10 @@ In Netlify: **Site configuration** → **Environment variables** → **Add a var
 
 In Supabase: **Authentication** → **URL configuration**
 
-- **Site URL:** your Netlify URL (e.g. `https://athro-goals.netlify.app`)
+- **Site URL:** your Netlify URL (e.g. `https://athrogoals.co.uk`)
 - **Redirect URLs:** add:
-  - `https://athro-goals.netlify.app/**`
-  - `https://athro-goals.netlify.app/api/auth/callback`
+  - `https://athrogoals.co.uk/**`
+  - `https://athrogoals.co.uk/api/auth/callback`
 
 ---
 
@@ -71,7 +71,7 @@ npx dotenv-cli -e .env.local -- npx prisma db push
 ## 5. Stripe webhook (when using payments)
 
 1. In Stripe Dashboard → **Developers** → **Webhooks**
-2. Add endpoint: `https://athro-goals.netlify.app/api/stripe/webhook`
+2. Add endpoint: `https://athrogoals.co.uk/api/stripe/webhook`
 3. Select events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
 4. Copy the **Signing secret** → `STRIPE_WEBHOOK_SECRET` in Netlify
 

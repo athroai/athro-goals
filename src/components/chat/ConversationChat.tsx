@@ -435,10 +435,10 @@ export function ConversationChat({
           {limitReached && (
             <div className="mx-auto max-w-md rounded-2xl border border-[rgba(228,201,126,0.3)] bg-[rgba(228,201,126,0.05)] p-6 text-center">
               <h3 className="text-lg font-semibold text-[var(--gold)]">
-                You&apos;ve used your free pathway
+                You&apos;ve used your pathway allowance
               </h3>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Free accounts get 1 pathway per month. Upgrade to continue building pathways and return to this one.
+                Upgrade to continue building pathways and return to this one.
               </p>
               <a
                 href={pathwayId ? `/upgrade?returnTo=${encodeURIComponent(`/goal/new?resume=${pathwayId}`)}` : "/upgrade"}

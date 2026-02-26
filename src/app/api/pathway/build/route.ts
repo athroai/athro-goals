@@ -232,10 +232,20 @@ async function generatePathway(
       },
     });
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { pathwaysUsedThisMonth: { increment: 1 } },
-    });
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    const now = new Date();
+    if (dbUser && (!dbUser.pathwaysResetDate || now > dbUser.pathwaysResetDate)) {
+      const resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { pathwaysUsedThisMonth: 1, pathwaysResetDate: resetDate },
+      });
+    } else {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { pathwaysUsedThisMonth: { increment: 1 } },
+      });
+    }
   } catch (error) {
     console.error("Pathway generation error:", error);
     try {

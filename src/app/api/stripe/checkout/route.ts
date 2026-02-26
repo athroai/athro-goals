@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const dbUser = await getOrCreateUser(authUser);
 
     const body = await req.json();
-    const { priceId, tier: requestedTier } = body as { priceId?: string; tier?: "EXPLORER" | "PRO" | "ADVISER" };
+    const { priceId, tier: requestedTier, returnTo } = body as { priceId?: string; tier?: "EXPLORER" | "PRO" | "ADVISER"; returnTo?: string };
     const tierPrice =
       requestedTier === "ADVISER"
         ? process.env.STRIPE_ADVISER_PRICE_ID
@@ -39,12 +39,17 @@ export async function POST(req: NextRequest) {
 
     const tier = getTierFromPrice(price);
 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const successPath = returnTo && returnTo.startsWith("/") ? returnTo : "/dashboard";
+    const sep = successPath.includes("?") ? "&" : "?";
+    const successUrl = `${baseUrl}${successPath}${sep}success=true`;
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/settings`,
+      success_url: successUrl,
+      cancel_url: `${baseUrl}/settings`,
       customer_email: dbUser.email,
       client_reference_id: dbUser.id,
       metadata: { userId: dbUser.id, tier },

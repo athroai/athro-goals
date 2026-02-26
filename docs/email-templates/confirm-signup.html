@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm your Athro Goals account</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0a1612; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0a1612; min-height: 100vh;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom: 32px;">
+              <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: #e4c97e; letter-spacing: -0.5px;">Athro Goals</span>
+            </td>
+          </tr>
+          <!-- Card -->
+          <tr>
+            <td style="background-color: #1c2a1e; border-radius: 16px; border: 1px solid rgba(228, 201, 126, 0.2); padding: 40px 32px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);">
+              <h1 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #e4c97e; font-family: Georgia, serif;">Confirm your email</h1>
+              <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #b5cbb2;">You're one step away from turning your goals into reality. Click the button below to verify your email and get started.</p>
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="padding: 8px 0 24px 0;">
+                    <a href="{{ .ConfirmationURL }}" style="display: inline-block; background-color: #e4c97e; color: #1c2a1e; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 50px;">Confirm my email</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #8a9f87;">If the button doesn't work, copy and paste this link into your browser:</p>
+              <p style="margin: 8px 0 0 0; font-size: 12px; word-break: break-all; color: #e4c97e;"><a href="{{ .ConfirmationURL }}" style="color: #e4c97e; text-decoration: underline;">{{ .ConfirmationURL }}</a></p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding-top: 32px;">
+              <p style="margin: 0; font-size: 12px; color: #6b7f68;">Life goals with real dates. No hallucination.</p>
+              <p style="margin: 8px 0 0 0; font-size: 11px; color: #5a6d58;">If you didn't sign up, you can safely ignore this email.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

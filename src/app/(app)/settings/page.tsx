@@ -10,9 +10,16 @@ const TIER_ORDER = ["FREE", "EXPLORER", "PRO", "ADVISER"] as const;
 
 const TIER_INFO: Record<string, { name: string; description: string; pathways: string; price: string }> = {
   FREE: { name: "Free", description: "Get started", pathways: "1 pathway/month", price: "£0" },
-  EXPLORER: { name: "Explorer", description: "More pathways", pathways: "5 pathways/month", price: "—" },
-  PRO: { name: "Pro", description: "Full access", pathways: "25 pathways/month", price: "—" },
-  ADVISER: { name: "Adviser", description: "For professionals", pathways: "100 pathways/month", price: "—" },
+  EXPLORER: { name: "Explorer", description: "More pathways", pathways: "5 pathways/month", price: "£4.99/mo" },
+  PRO: { name: "Pro", description: "Full access", pathways: "25 pathways/month", price: "£9.99/mo" },
+  ADVISER: { name: "Adviser", description: "For professionals", pathways: "100 pathways/month", price: "£29.99/mo" },
+};
+
+const TIER_LIMITS: Record<string, number> = {
+  FREE: 1,
+  EXPLORER: 5,
+  PRO: 25,
+  ADVISER: 100,
 };
 
 export default async function SettingsPage() {
@@ -36,7 +43,7 @@ export default async function SettingsPage() {
 
       {/* Current plan */}
       <section className="rounded-2xl border border-[rgba(228,201,126,0.2)] bg-[var(--card-bg)] p-5">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Current plan</p>
             <h2 className="mt-1 font-display text-xl font-bold text-[var(--gold)]">
@@ -44,9 +51,19 @@ export default async function SettingsPage() {
             </h2>
             <p className="mt-1 text-sm text-[var(--muted)]">{currentInfo.pathways}</p>
           </div>
-          <span className="rounded-full bg-[var(--gold)]/10 px-3 py-1 text-xs font-semibold text-[var(--gold)]">
-            {dbUser.pathwaysUsedThisMonth} used this month
-          </span>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <span className="rounded-full bg-[var(--gold)]/10 px-3 py-1 text-xs font-semibold text-[var(--gold)]">
+              {dbUser.pathwaysUsedThisMonth} of {TIER_LIMITS[dbUser.subscriptionTier] ?? 1} used
+            </span>
+            {dbUser.subscriptionTier === "FREE" && (
+              <Link
+                href="/upgrade"
+                className="rounded-full bg-[var(--gold)] px-4 py-2 text-sm font-semibold text-[var(--dark-bg)] transition hover:opacity-90"
+              >
+                Upgrade
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
@@ -56,7 +73,7 @@ export default async function SettingsPage() {
           Plans
         </h2>
         <p className="mt-1 text-xs text-[var(--muted)]">
-          Configure pricing in Stripe. Set STRIPE_EXPLORER_PRICE_ID, STRIPE_PRO_PRICE_ID, STRIPE_ADVISER_PRICE_ID in your environment.
+          Explorer £4.99 · Pro £9.99 · Adviser £29.99 per month.
         </p>
         <div className="mt-4 space-y-3">
           {(["FREE", "EXPLORER", "PRO", "ADVISER"] as const).map((tier) => {

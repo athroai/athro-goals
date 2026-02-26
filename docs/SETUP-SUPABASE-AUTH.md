@@ -14,10 +14,10 @@ The verification link redirects to the wrong URL if Supabase isn’t configured 
 
 | Setting | Value |
 |---------|-------|
-| **Site URL** | `https://athrogoals.netlify.app` |
+| **Site URL** | `https://athrogoals.co.uk` |
 | **Redirect URLs** | Add these (one per line): |
-| | `https://athrogoals.netlify.app/**` |
-| | `https://athrogoals.netlify.app/api/auth/callback` |
+| | `https://athrogoals.co.uk/**` |
+| | `https://athrogoals.co.uk/api/auth/callback` |
 | | `http://localhost:3000/**` |
 | | `http://localhost:3000/api/auth/callback` |
 
@@ -58,22 +58,18 @@ To send auth emails via Resend instead of Supabase’s default:
 
 ---
 
-## 4. Custom email templates (optional)
+## 4. Custom email templates
 
-Supabase uses built‑in templates by default. To customize them:
+A themed **Confirm signup** template is in `docs/email-templates/confirm-signup.html`.
+
+To use it:
 
 1. **Authentication** → **Email Templates**
-2. Edit **Confirm signup** (and others if needed)
-3. Use `{{ .ConfirmationURL }}` for the verification link
-4. Use `{{ .SiteURL }}` for your app URL
+2. Select **Confirm signup**
+3. Copy the contents of `docs/email-templates/confirm-signup.html` into the template editor
+4. **Save**
 
-Example:
-
-```html
-<h2>Confirm your signup</h2>
-<p>Click the link below to verify your email:</p>
-<p><a href="{{ .ConfirmationURL }}">Confirm email</a></p>
-```
+The template uses Athro Goals branding (dark green background, gold accents) and includes a clear CTA button plus a fallback link for clients that block buttons.
 
 ---
 
@@ -83,7 +79,7 @@ Ensure these are set in Netlify:
 
 | Variable | Value |
 |----------|-------|
-| `NEXT_PUBLIC_APP_URL` | `https://athrogoals.netlify.app` |
+| `NEXT_PUBLIC_APP_URL` | `https://athrogoals.co.uk` |
 
 This is used for `emailRedirectTo` in production.
 
@@ -91,7 +87,7 @@ This is used for `emailRedirectTo` in production.
 
 ## 6. Checklist
 
-- [ ] Supabase **Site URL** = `https://athrogoals.netlify.app`
+- [ ] Supabase **Site URL** = `https://athrogoals.co.uk`
 - [ ] Supabase **Redirect URLs** include production and localhost URLs
 - [ ] `NEXT_PUBLIC_APP_URL` set in Netlify
 - [ ] Resend SMTP configured in Supabase (optional)
@@ -101,7 +97,7 @@ This is used for `emailRedirectTo` in production.
 
 ## 7. Testing
 
-1. Sign up from **https://athrogoals.netlify.app/register**
+1. Sign up from **https://athrogoals.co.uk/register**
 2. Check the confirmation email
 3. Click the link – it should land on `/api/auth/callback` and then redirect to the app
 4. You should be logged in and redirected to the dashboard

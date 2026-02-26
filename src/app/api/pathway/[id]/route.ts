@@ -79,7 +79,7 @@ export async function PUT(
         return NextResponse.json(
           {
             error: "limit_reached",
-            message: "You've used your free pathway this month.",
+            message: `You've used your ${limit} pathway${limit === 1 ? "" : "s"} for this month. Upgrade for more.`,
             tier: dbUser.subscriptionTier,
             used: dbUser.pathwaysUsedThisMonth,
             limit,

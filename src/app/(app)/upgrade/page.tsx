@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import prisma from "@/lib/prisma";
+import { getOrCreateUser } from "@/lib/user";
+import { UpgradePlans } from "@/components/upgrade/UpgradePlans";
 
 export default async function UpgradePage({
   searchParams,
@@ -17,28 +20,26 @@ export default async function UpgradePage({
     redirect(`/login?next=${encodeURIComponent(returnTo ? `/upgrade?returnTo=${encodeURIComponent(returnTo)}` : "/upgrade")}`);
   }
 
+  const user = await getOrCreateUser(authUser);
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+  const currentTier = dbUser?.subscriptionTier ?? "FREE";
   const hasPathway = backUrl.includes("resume=");
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-16 text-center">
-      <h1 className="font-display text-2xl font-bold text-[var(--gold)]">
+    <div className="mx-auto max-w-lg px-4 py-12">
+      <h1 className="font-display text-2xl font-bold text-[var(--gold)] text-center">
         Upgrade to get more pathways
       </h1>
-      <p className="mt-4 text-[var(--muted)]">
-        Free accounts get 1 pathway per month. Upgrade to Explorer or Pro for more pathways
-        {hasPathway ? " and to return to your current goal" : ""}.
+      <p className="mt-4 text-center text-[var(--muted)]">
+        Free accounts get 1 pathway per month. Choose a plan for more.
+        {hasPathway && " Complete checkout to return to your current goal."}
       </p>
-      <div className="mt-8 flex flex-col gap-4">
-        <Link
-          href={backUrl}
-          className="btn-cta inline-block rounded-xl px-8 py-4 font-semibold"
-        >
-          {hasPathway ? "Return to my pathway" : "Back to goals"}
+      <UpgradePlans currentTier={currentTier} returnTo={backUrl} />
+      <p className="mt-6 text-center">
+        <Link href={backUrl} className="text-sm text-[var(--muted)] hover:text-[var(--gold)]">
+          ← Back to goals
         </Link>
-        <p className="text-sm text-[var(--muted)]">
-          Payment options coming soon. For now, you can return to view your pathway.
-        </p>
-      </div>
+      </p>
     </div>
   );
 }

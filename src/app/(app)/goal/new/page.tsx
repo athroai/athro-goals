@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { ConversationChat } from "@/components/chat/ConversationChat";
@@ -32,14 +33,19 @@ export default async function NewGoalPage({
         {limitReached ? (
           <div className="mx-auto max-w-lg px-4 py-16 text-center">
             <h2 className="font-display text-xl font-bold text-[var(--gold)]">
-              You&apos;ve used your free pathway
+              You&apos;ve used your pathway allowance
             </h2>
             <p className="mt-4 text-[var(--muted)]">
-              Free accounts get 1 pathway per month. Upgrade to create more.
+              {dbUserForLimit?.subscriptionTier === "FREE"
+                ? "Free accounts get 1 pathway per month. Upgrade to create more."
+                : `You've used all your pathways for this month.`}
             </p>
-            <a href="/upgrade" className="btn-cta mt-6 inline-block rounded-xl px-6 py-3 font-semibold">
+            <Link
+              href="/upgrade?returnTo=%2Fgoal%2Fnew"
+              className="btn-cta mt-6 inline-block rounded-xl px-6 py-3 font-semibold"
+            >
               Upgrade to continue
-            </a>
+            </Link>
           </div>
         ) : (
           <GoalIntakeForm />

@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { SuccessBanner } from "@/components/ui/SuccessBanner";
 
 export default async function AppLayout({
   children,
@@ -19,6 +21,9 @@ export default async function AppLayout({
       <Sidebar />
       <div className="flex min-h-0 flex-1 flex-col">
         <Header />
+        <Suspense fallback={null}>
+          <SuccessBanner />
+        </Suspense>
         <main className="min-h-0 flex-1 overflow-y-auto bg-[var(--dark-bg)] pb-20 md:pb-0">{children}</main>
       </div>
     </div>

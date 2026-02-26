@@ -53,12 +53,12 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await getOrCreateUser(authUser);
-    const { limitReached } = checkPathwayLimit(user);
+    const { limitReached, pathwayLimit } = checkPathwayLimit(user);
     if (limitReached) {
       return new Response(
         JSON.stringify({
           error: "limit_reached",
-          message: "You've used your free pathway this month. Upgrade to continue.",
+          message: `You've used your ${pathwayLimit} pathway${pathwayLimit === 1 ? "" : "s"} for this month. Upgrade to continue.`,
         }),
         { status: 429, headers: { "Content-Type": "application/json" } }
       );
