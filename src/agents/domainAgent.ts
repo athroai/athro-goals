@@ -151,13 +151,22 @@ export async function invokeDomainAgent(
   const MAX_USER_MESSAGES = 10;
   const isLastTurn = responseNumber >= MAX_USER_MESSAGES;
 
-  const FORMAT_RULE = `FORMAT: Use **bold** for key terms. Use short bullet lists. Keep paragraphs short.`;
+  const FORMAT_RULE = `FORMAT: Use **bold** for key terms. Use short bullet lists. Keep paragraphs short. NEVER generate pathway steps, phases, milestones, or timelines in chat.`;
+
+  const lastAssistantMsg = chatHistory.filter((m) => m.role === "assistant").pop();
+  const previouslyOfferedBuild =
+    lastAssistantMsg != null &&
+    /ready to build|build your.*pathway|shall I build|want me to build|let'?s build/i.test(
+      lastAssistantMsg.content
+    );
 
   let pacingDirective: string;
-  if (isLastTurn) {
-    pacingDirective = `TURN ${responseNumber}/10 — PHASE 3 (FINAL): No more questions. Summarise goal, target, situation. Include [OFFER_BUILD].\n${FORMAT_RULE}`;
+  if (previouslyOfferedBuild && responseNumber >= 3) {
+    pacingDirective = `The user has responded after being offered the build button. Say something brief like "Let's build it!" or "Great — building your pathway now." Include [OFFER_BUILD]. Do NOT generate any pathway content, phases, steps, summaries, or timelines.\n${FORMAT_RULE}`;
+  } else if (isLastTurn) {
+    pacingDirective = `TURN ${responseNumber}/10 — PHASE 3 (FINAL): No more questions. Briefly summarise goal, target, situation (2-4 lines). Include [OFFER_BUILD]. Do NOT generate pathway content.\n${FORMAT_RULE}`;
   } else if (responseNumber >= 5) {
-    pacingDirective = `TURN ${responseNumber}/10 — PHASE 3: Stop asking. Summarise what you know. Include [OFFER_BUILD].\n${FORMAT_RULE}`;
+    pacingDirective = `TURN ${responseNumber}/10 — PHASE 3: Stop asking. Briefly summarise what you know (2-4 lines). Include [OFFER_BUILD]. Do NOT generate pathway steps or phases.\n${FORMAT_RULE}`;
   } else if (responseNumber >= 3) {
     pacingDirective = `TURN ${responseNumber}/10 — PHASE 2: If you have goal + target + situation → include [OFFER_BUILD]. Else ask ONE focused question.\n${FORMAT_RULE}`;
   } else {
