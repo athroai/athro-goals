@@ -53,8 +53,11 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { status } = body as { status?: string };
-    const allowedStatuses = ["ARCHIVED", "GENERATING"];
+    const { status, pathwayData } = body as {
+      status?: string;
+      pathwayData?: Record<string, unknown>;
+    };
+    const allowedStatuses = ["ARCHIVED", "GENERATING", "COMPLETE"];
 
     if (status === "GENERATING") {
       const limits: Record<string, number> = {
@@ -89,10 +92,19 @@ export async function PUT(
       }
     }
 
+    const updateData: Record<string, unknown> = {};
+
     if (status && allowedStatuses.includes(status)) {
+      updateData.status = status;
+    }
+    if (pathwayData && typeof pathwayData === "object") {
+      updateData.pathwayData = pathwayData;
+    }
+
+    if (Object.keys(updateData).length > 0) {
       await prisma.pathway.update({
         where: { id },
-        data: { status: status as "ARCHIVED" | "GENERATING" },
+        data: updateData,
       });
     }
 

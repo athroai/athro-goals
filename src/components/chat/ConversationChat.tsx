@@ -33,6 +33,12 @@ export function ConversationChat({
   const [toolStatus, setToolStatus] = useState<string | null>(null);
   const [streamingText, setStreamingText] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [buildProgress, setBuildProgress] = useState<{
+    phase: "structure" | "enriching" | "finalizing";
+    totalSteps: number;
+    completedSteps: number;
+    stepTitles: string[];
+  } | null>(null);
   const [showBuildButton, setShowBuildButton] = useState(false);
   const [buildLoading, setBuildLoading] = useState(false);
   const [inputLocked, setInputLocked] = useState(false);
@@ -83,6 +89,7 @@ export function ConversationChat({
       }
 
       setGenerating(true);
+      setBuildProgress({ phase: "structure", totalSteps: 0, completedSteps: 0, stepTitles: [] });
 
       const buildRes = await fetch("/api/pathway/build", {
         method: "POST",
@@ -95,55 +102,99 @@ export function ConversationChat({
         throw new Error(buildErr.error || buildErr.message || `Build failed (${buildRes.status})`);
       }
 
-      const reader = buildRes.body?.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
+      const skeleton = await buildRes.json();
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const blocks = buffer.split("\n\n");
-          buffer = blocks.pop() || "";
-          for (const block of blocks) {
-            if (!block.trim()) continue;
-            let eventType = "";
-            let eventData = "";
-            for (const line of block.split("\n")) {
-              if (line.startsWith("event: ")) eventType = line.slice(7).trim();
-              else if (line.startsWith("data: ")) eventData = line.slice(6);
-            }
-            if (eventType === "complete" && eventData) {
-              try {
-                const data = JSON.parse(eventData);
-                if (data.pathwayId) {
-                  router.push(`/pathway/${data.pathwayId}`);
-                  return;
-                }
-              } catch {
-                /* ignore */
+      setBuildProgress({
+        phase: "enriching",
+        totalSteps: skeleton.steps.length,
+        completedSteps: 0,
+        stepTitles: skeleton.steps.map((s: { title: string }) => s.title),
+      });
+
+      let completed = 0;
+      const enrichmentResults = await Promise.all(
+        skeleton.steps.map(
+          async (step: {
+            id: string;
+            title: string;
+            stageLabel: string;
+            definiteDate: string | null;
+            estimatedCost: number | null;
+          }) => {
+            try {
+              const res = await fetch("/api/pathway/build/step", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  stepId: step.id,
+                  goal: skeleton.goal,
+                  conversationSummary: skeleton.conversationSummary,
+                  stepTitle: step.title,
+                  stepDate: step.definiteDate ?? "",
+                  stepStage: step.stageLabel,
+                  estimatedCost: step.estimatedCost,
+                  groundingType: skeleton.groundingType,
+                }),
+              });
+
+              const data = await res.json();
+              completed++;
+              setBuildProgress((prev) =>
+                prev ? { ...prev, completedSteps: completed } : null
+              );
+
+              if (!res.ok) {
+                console.error(`Step enrichment failed for "${step.title}":`, data.error);
+                return null;
               }
-            }
-            if (eventType === "error" && eventData) {
-              try {
-                const data = JSON.parse(eventData);
-                setMessages((prev) => [
-                  ...prev,
-                  { id: `err-${Date.now()}`, role: "system", content: data.error || "Build failed." },
-                ]);
-              } catch {
-                /* ignore */
-              }
+              return data;
+            } catch (err) {
+              completed++;
+              setBuildProgress((prev) =>
+                prev ? { ...prev, completedSteps: completed } : null
+              );
+              console.error(`Step enrichment error for "${step.title}":`, err);
+              return null;
             }
           }
-        }
-      }
+        )
+      );
+
+      setBuildProgress((prev) => (prev ? { ...prev, phase: "finalizing" } : null));
+
+      const mergedSteps = (
+        skeleton.pathwayData?.steps as Record<string, unknown>[] | undefined
+      )?.map((s: Record<string, unknown>, i: number) => {
+        const enriched = enrichmentResults[i];
+        if (!enriched) return s;
+        return {
+          ...s,
+          description: enriched.description,
+          checklist: enriched.checklist,
+          costBreakdown: enriched.costBreakdown,
+          costNote: enriched.costNote,
+          savingsTarget: enriched.savingsTarget,
+          recommendations: enriched.recommendations,
+          tips: enriched.tips,
+          sources: enriched.sources,
+          sourceType: enriched.sourceType,
+        };
+      });
+
+      await fetch(`/api/pathway/${pathwayId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "COMPLETE",
+          pathwayData: { ...skeleton.pathwayData, steps: mergedSteps },
+        }),
+      });
 
       router.push(`/pathway/${pathwayId}`);
     } catch (err) {
       setGenerating(false);
       setBuildLoading(false);
+      setBuildProgress(null);
       setShowBuildButton(true);
       const msg = err instanceof Error ? err.message : "Failed to start building. Try again.";
       setMessages((prev) => [
@@ -324,17 +375,67 @@ export function ConversationChat({
   }
 
   if (generating) {
+    const bp = buildProgress;
+    const phaseLabel =
+      bp?.phase === "structure"
+        ? "Planning your pathway structure..."
+        : bp?.phase === "enriching"
+          ? `Enriching step ${Math.min(bp.completedSteps + 1, bp.totalSteps)} of ${bp.totalSteps}`
+          : bp?.phase === "finalizing"
+            ? "Saving your pathway..."
+            : "Building your pathway...";
+
+    const progressPercent =
+      bp?.phase === "structure"
+        ? 10
+        : bp?.phase === "enriching"
+          ? 15 + Math.round((bp.completedSteps / Math.max(bp.totalSteps, 1)) * 75)
+          : 95;
+
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-[rgba(228,201,126,0.3)] border-t-[var(--gold)]" />
-        <div className="text-center">
+        <div className="w-full max-w-sm text-center">
           <h2 className="text-xl font-semibold text-[var(--light)]">Building your pathway</h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            Researching steps, timelines, and costs...
-          </p>
-          <p className="mt-1 text-xs text-[var(--muted)]">
-            This usually takes 30-60 seconds.
-          </p>
+          <p className="mt-2 text-sm text-[var(--gold)]">{phaseLabel}</p>
+
+          <div className="mx-auto mt-4 h-2 w-full overflow-hidden rounded-full bg-[rgba(228,201,126,0.15)]">
+            <div
+              className="h-full rounded-full bg-[var(--gold)] transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          {bp?.phase === "enriching" && bp.stepTitles.length > 0 && (
+            <ul className="mt-4 space-y-1.5 text-left">
+              {bp.stepTitles.map((title, i) => {
+                const done = i < bp.completedSteps;
+                const active = i === bp.completedSteps && bp.completedSteps < bp.totalSteps;
+                return (
+                  <li key={i} className="flex items-center gap-2 text-xs">
+                    {done ? (
+                      <span className="text-[var(--bright-green)]">&#10003;</span>
+                    ) : active ? (
+                      <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[var(--gold)]" />
+                    ) : (
+                      <span className="inline-block h-2 w-2 rounded-full bg-[var(--muted)]/30" />
+                    )}
+                    <span
+                      className={
+                        done
+                          ? "text-[var(--bright-green)]"
+                          : active
+                            ? "text-[var(--gold)]"
+                            : "text-[var(--muted)]"
+                      }
+                    >
+                      {title}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
         <button
           onClick={() => router.push("/")}
