@@ -207,8 +207,8 @@ export function PathwayView({
                     {step.stepOrder}. {step.title}
                   </h3>
                   {complete && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bright-green)]/20 px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--bright-green)]">
-                      ★ Stage complete
+                    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[var(--bright-green)]/20 px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--bright-green)]">
+                      ★ Completed
                     </span>
                   )}
                 </div>

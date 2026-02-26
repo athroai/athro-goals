@@ -60,13 +60,6 @@ export function PathwayGenerating({
           Pathway generation may have timed out. You can try again from the chat or start a new goal.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <button
-            type="button"
-            onClick={() => router.refresh()}
-            className="btn-secondary inline-block rounded-xl px-6 py-3 font-semibold"
-          >
-            Check status
-          </button>
           <Link
             href={`/goal/new?resume=${pathwayId}`}
             className="rounded-xl border border-[rgba(228,201,126,0.3)] px-6 py-3 font-semibold text-[var(--gold)] hover:bg-[rgba(228,201,126,0.1)]"
