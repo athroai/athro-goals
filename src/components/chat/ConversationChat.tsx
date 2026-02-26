@@ -77,7 +77,10 @@ export function ConversationChat({
         return;
       }
 
-      if (!putRes.ok) throw new Error("Failed to start build");
+      if (!putRes.ok) {
+        const putErr = await putRes.json().catch(() => ({}));
+        throw new Error(putErr.message || putErr.error || `Start build failed (${putRes.status})`);
+      }
 
       setGenerating(true);
 
@@ -88,7 +91,8 @@ export function ConversationChat({
       });
 
       if (!buildRes.ok) {
-        throw new Error("Build failed");
+        const buildErr = await buildRes.json().catch(() => ({}));
+        throw new Error(buildErr.error || buildErr.message || `Build failed (${buildRes.status})`);
       }
 
       const reader = buildRes.body?.getReader();
@@ -137,13 +141,14 @@ export function ConversationChat({
       }
 
       router.push(`/pathway/${pathwayId}`);
-    } catch {
+    } catch (err) {
       setGenerating(false);
       setBuildLoading(false);
       setShowBuildButton(true);
+      const msg = err instanceof Error ? err.message : "Failed to start building. Try again.";
       setMessages((prev) => [
         ...prev,
-        { id: `err-${Date.now()}`, role: "system", content: "Failed to start building. Try again." },
+        { id: `err-${Date.now()}`, role: "system", content: msg },
       ]);
     }
   }
