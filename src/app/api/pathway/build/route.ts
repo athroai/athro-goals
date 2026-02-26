@@ -101,6 +101,14 @@ export async function POST(req: NextRequest) {
         clearInterval(heartbeat);
         const msg = err instanceof Error ? err.message : String(err);
         console.error("Pathway build error:", msg, err);
+        try {
+          await prisma.pathway.update({
+            where: { id: pathwayId },
+            data: { status: "ERROR" },
+          });
+        } catch {
+          /* ignore */
+        }
         sendEvent("error", { error: msg });
       }
 

@@ -15,7 +15,7 @@
   external_node_modules = []
 
 [functions."*"]
-  timeout = 60
+  timeout = 120
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

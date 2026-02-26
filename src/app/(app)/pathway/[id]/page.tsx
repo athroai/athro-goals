@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
+import { PathwayGenerating } from "@/components/pathway/PathwayGenerating";
 
 export default async function PathwayPage({
   params,
@@ -27,11 +28,10 @@ export default async function PathwayPage({
 
   if (pathway.status === "GENERATING") {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[var(--gold)] border-t-transparent mx-auto" />
-        <h2 className="mt-4 text-xl font-semibold text-[var(--light)]">Building your pathway</h2>
-        <p className="mt-2 text-[var(--muted)]">This usually takes 30-60 seconds.</p>
-      </div>
+      <PathwayGenerating
+        pathwayId={pathway.id}
+        startedAt={pathway.updatedAt.toISOString()}
+      />
     );
   }
 
