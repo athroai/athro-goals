@@ -59,10 +59,10 @@ export async function schedulePathwayNotifications(
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
 
-    const { status } = await LocalNotifications.checkPermissions();
-    if (status !== "granted") {
-      const { status: reqStatus } = await LocalNotifications.requestPermissions();
-      if (reqStatus !== "granted") return;
+    const permissions = await LocalNotifications.checkPermissions();
+    if (permissions.display !== "granted") {
+      const request = await LocalNotifications.requestPermissions();
+      if (request.display !== "granted") return;
     }
 
     const idsToCancel: number[] = [];
