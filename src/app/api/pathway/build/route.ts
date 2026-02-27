@@ -12,6 +12,10 @@ import prisma from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/user";
 import Anthropic from "@anthropic-ai/sdk";
 import { getStructurePrompt } from "@/prompts/pathwayBuild";
+import {
+  fetchPathwayWebResearch,
+  buildResearchBlock,
+} from "@/lib/pathwayResearch";
 
 function sanitize(text: string): string {
   return text
@@ -65,8 +69,18 @@ export async function POST(req: NextRequest) {
   try {
     await prisma.pathwayStep.deleteMany({ where: { pathwayId } });
 
+    const goal =
+      conversationSummary.split("\n")[0].replace(/^USER:\s*/i, "").trim() ||
+      pathway.goal ||
+      "";
+    const webResearch = await fetchPathwayWebResearch(conversationSummary, goal);
+    const researchBlock = buildResearchBlock(webResearch);
+    const structurePromptBase = getStructurePrompt(groundingType);
+    const structurePrompt = researchBlock
+      ? `${structurePromptBase}\n\n## RESEARCH DATA (use this to personalise the pathway — cite sources, include specific costs, airlines, places, providers)\n${researchBlock}`
+      : structurePromptBase;
+
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-    const structurePrompt = getStructurePrompt(groundingType);
     const abortController = new AbortController();
     const apiTimeout = setTimeout(() => abortController.abort(), 45_000);
 
