@@ -27,7 +27,7 @@ export async function Header() {
           rel="noopener noreferrer"
           className="text-xs text-[var(--muted)] transition hover:text-[var(--gold)]"
         >
-          Athro Goals — part of the Athro AI ecosystem
+          Athro Apps
         </a>
         {authUser ? (
           <>
