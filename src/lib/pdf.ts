@@ -200,7 +200,7 @@ export async function generatePathwayPdf(
       if (checklist.length > 0) {
         drawText("Checklist:", { size: 10, color: MID });
         for (const item of checklist) {
-          drawText(`  ☐ ${item}`, { size: 10, indent: 12 });
+          drawText(`  - ${item}`, { size: 10, indent: 12 });
         }
       }
       const sources = Array.isArray(step.sources)
