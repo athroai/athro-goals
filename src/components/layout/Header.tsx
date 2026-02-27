@@ -20,7 +20,15 @@ export async function Header() {
       <Link href="/dashboard" className="font-display text-lg font-bold text-[var(--gold)]">
         Athro Goals
       </Link>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
+        <a
+          href="https://athroapps.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-[var(--muted)] transition hover:text-[var(--gold)]"
+        >
+          All Athro Apps
+        </a>
         {authUser ? (
           <>
             {displayName && (
