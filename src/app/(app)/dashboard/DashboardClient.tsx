@@ -229,7 +229,7 @@ export function DashboardClient({
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   onBlur={() => handleRenameFolder(folder.id)}
-                  className="w-24 rounded-full border border-[var(--gold)]/40 bg-transparent px-3 py-1 text-xs text-[var(--light)] outline-none"
+                  className="min-w-[8rem] rounded-full border border-[var(--gold)]/40 bg-transparent px-3 py-1 text-xs text-[var(--light)] outline-none"
                 />
               </form>
             ) : (
@@ -260,7 +260,8 @@ export function DashboardClient({
                       folderMenuOpen === folder.id ? null : folder.id
                     );
                   }}
-                  className="ml-1 opacity-0 group-hover:opacity-60"
+                  className="ml-1 cursor-pointer opacity-60 hover:opacity-100"
+                  title="Rename or delete folder"
                 >
                   ···
                 </span>
