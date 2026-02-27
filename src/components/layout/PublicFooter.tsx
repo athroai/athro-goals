@@ -15,7 +15,14 @@ export function PublicFooter() {
         </Link>
       </div>
       <p className="mt-3">
-        Athro Goals — part of the Athro AI ecosystem
+        <a
+          href="https://athroapps.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition hover:text-[var(--gold)]"
+        >
+          Athro Goals — part of the Athro AI ecosystem
+        </a>
       </p>
     </footer>
   );

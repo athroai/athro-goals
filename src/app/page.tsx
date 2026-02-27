@@ -9,9 +9,14 @@ export default async function HomePage() {
   return (
     <div className="bg-[var(--dark-bg)]">
       <header className="flex items-center justify-between border-b border-[rgba(228,201,126,0.15)] px-3 py-3 md:px-8 md:py-4">
-        <span className="font-display text-base font-bold text-[var(--gold)] md:text-xl">
-          Athro Goals
-        </span>
+        <a
+          href="https://athroapps.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-display text-base font-bold text-[var(--gold)] transition hover:opacity-90 md:text-xl"
+        >
+          Athro Goals — part of the Athro AI ecosystem
+        </a>
         <nav className="flex shrink-0 gap-2 md:gap-4">
           {user ? (
             <Link
