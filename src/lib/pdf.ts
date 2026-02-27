@@ -20,6 +20,7 @@ interface PathwayStepData {
   estimatedCost?: number;
   costNote?: string;
   tips?: string;
+  checklist?: string[];
   sources?: string[] | { names?: string[] } | unknown[];
 }
 
@@ -192,6 +193,15 @@ export async function generatePathwayPdf(
       }
       if (step.tips) {
         drawText(`Tips: ${step.tips}`, { size: 10, color: MID });
+      }
+      const checklist = Array.isArray(step.checklist)
+        ? step.checklist.filter((x): x is string => typeof x === "string")
+        : [];
+      if (checklist.length > 0) {
+        drawText("Checklist:", { size: 10, color: MID });
+        for (const item of checklist) {
+          drawText(`  ☐ ${item}`, { size: 10, indent: 12 });
+        }
       }
       const sources = Array.isArray(step.sources)
         ? step.sources.filter((x): x is string => typeof x === "string")

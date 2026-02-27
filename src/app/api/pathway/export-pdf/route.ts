@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
     const stepDataList = (data?.steps as Array<Record<string, unknown>>) ?? [];
     const steps = pathway.steps.map((s, i) => {
       const stepData = stepDataList[i];
+      const checklist = s.checklist;
+      const checklistArr = Array.isArray(checklist)
+        ? checklist.filter((x): x is string => typeof x === "string")
+        : [];
       return {
         stepOrder: s.stepOrder,
         title: s.title,
@@ -49,6 +53,7 @@ export async function POST(req: NextRequest) {
         estimatedCost: s.estimatedCost ?? undefined,
         costNote: stepData?.costNote as string | undefined,
         tips: s.tips ?? undefined,
+        checklist: checklistArr,
         sources: (() => {
           const src = s.sources;
           if (Array.isArray(src)) return src.filter((x): x is string => typeof x === "string");

@@ -93,6 +93,18 @@ export async function POST(req: NextRequest) {
         lines.push(`💡 Tips: ${step.tips}`);
       }
 
+      const checklist = step.checklist;
+      const checklistArr = Array.isArray(checklist)
+        ? checklist.filter((x): x is string => typeof x === "string")
+        : [];
+      if (checklistArr.length > 0) {
+        lines.push("");
+        lines.push("Checklist:");
+        for (const item of checklistArr) {
+          lines.push(`☐ ${item}`);
+        }
+      }
+
       const sources = step.sources as { names?: string[] } | string[] | null;
       const names = Array.isArray(sources) ? sources : sources?.names ?? [];
       if (names.length > 0) {
