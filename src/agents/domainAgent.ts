@@ -188,7 +188,7 @@ export async function invokeDomainAgent(
     retrievalCount.perTurn = 0;
 
     const createParams: Anthropic.Messages.MessageCreateParams = {
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 800,
       system: systemPrompt,
       messages,
