@@ -33,6 +33,55 @@ interface PathwayData {
   steps?: PathwayStepData[];
 }
 
+// Characters outside Latin-1 (0x00-0xFF) that WinAnsiEncoding (the encoding
+// pdf-lib uses for StandardFonts.Helvetica) still supports, mapped from the
+// Windows-1252 0x80-0x9F range. Anything not in this set and not <= 0xFF
+// cannot be drawn with the standard fonts and must be replaced/stripped
+// before calling page.drawText, or pdf-lib throws
+// "WinAnsi cannot encode <char>".
+const WINANSI_EXTRA_CODEPOINTS = new Set<number>([
+  0x20ac, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021, 0x02c6, 0x2030,
+  0x0160, 0x2039, 0x0152, 0x017d, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022,
+  0x2013, 0x2014, 0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0x017e, 0x0178,
+]);
+
+// Common Unicode characters (arrows, checkmarks, bullets, etc.) that show up
+// in AI-generated pathway text but aren't in WinAnsi — map them to a safe
+// ASCII/Latin-1 equivalent instead of dropping the character silently.
+const CHAR_REPLACEMENTS: Record<string, string> = {
+  "\u2192": "->", // →
+  "\u2190": "<-", // ←
+  "\u2194": "<->", // ↔
+  "\u21d2": "=>", // ⇒
+  "\u2713": "[x]", // ✓
+  "\u2714": "[x]", // ✔
+  "\u2717": "[ ]", // ✗
+  "\u2718": "[ ]", // ✘
+  "\u25cf": "-", // ●
+  "\u25aa": "-", // ▪
+  "\u2b50": "*", // ⭐
+  "\u00a0": " ", // non-breaking space
+};
+
+function sanitizeForPdf(text: string): string {
+  let out = "";
+  for (const char of text) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code <= 0xff || WINANSI_EXTRA_CODEPOINTS.has(code)) {
+      out += char;
+      continue;
+    }
+    if (CHAR_REPLACEMENTS[char] != null) {
+      out += CHAR_REPLACEMENTS[char];
+      continue;
+    }
+    // Unknown unencodable character (e.g. emoji): drop it rather than
+    // crashing PDF generation.
+    out += "";
+  }
+  return out;
+}
+
 function money(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "N/A";
   return new Intl.NumberFormat("en-GB", {
@@ -96,7 +145,8 @@ export async function generatePathwayPdf(
     const size = opts.size ?? 11;
     const color = opts.color ?? DARK;
     const indent = opts.indent ?? 0;
-    const lines = wrapText(text, font, size, CONTENT_W - indent);
+    const safeText = sanitizeForPdf(text);
+    const lines = wrapText(safeText, font, size, CONTENT_W - indent);
 
     for (const line of lines) {
       ensureSpace(size + 4);
